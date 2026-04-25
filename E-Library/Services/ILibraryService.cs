@@ -1,6 +1,14 @@
-﻿namespace E_Library.Services
+﻿using E_Library.Dtos;
+using E_Library.Models;
+
+namespace E_Library.Services
 {
     public interface ILibraryService
     {
+        Task<PagedResult<BookDisplayModel>?> GetAllBooksAsync(int pageNumber, int pageSize);
+        Task<BookDisplayModel?> GetByIdAsync(int bookId, Guid userId);
+        Task<BookDisplayModel?> GetByAuthorAsync(string author);
+        Task<bool?> PurchaseBookAsync(int bookId, Guid userId);
+
     }
 }
