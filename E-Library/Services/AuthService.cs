@@ -14,12 +14,12 @@ using System.Text;
 
 namespace E_Library.Services
 {
-    public class AuthService(LibraryContext _usercontext, IConfiguration configuration) : IAuthService
+    public class AuthService(LibraryContext usercontext, IConfiguration configuration) : IAuthService
     {
-        private readonly LibraryContext user = _usercontext;
+        private readonly LibraryContext _user = usercontext;
         public async Task<UserModel?> RegisterAsync(UserDto request)
         {
-            if (_usercontext.User.Any(u => u.Username == request.Username)) return null;
+            if (_user.User.Any(u => u.Username == request.Username)) return null;
 
             var user = new UserModel();
             var hashedPassword = new PasswordHasher<UserModel>()
@@ -28,28 +28,31 @@ namespace E_Library.Services
             user.Username = request.Username;
             user.PasswordHash = hashedPassword;
 
-            await _usercontext.User.AddAsync(user);
+            await _user.User.AddAsync(user);
 
-            await _usercontext.SaveChangesAsync();
+            await _user.SaveChangesAsync();
 
             return user;
         }
         public async Task<TokenResponseDto?> LoginAsync(UserDto request)
         {
-            var user = await _usercontext.User.FirstOrDefaultAsync(u => u.Username == request.Username);
+            var user = await _user.User.FirstOrDefaultAsync(u => u.Username == request.Username);
             if (user == null) return null;
 
             if (new PasswordHasher<UserModel>()
                 .VerifyHashedPassword(user, user.PasswordHash, request.Password) == PasswordVerificationResult.Failed) return null;
 
-            return await CreateTokenResponse(user);            
+            return await CreateTokenResponse(user);
         }
-
-        Task<UserModel?> IAuthService.RefreshTokensAsync(RefreshTokenRequestDto request)
+        //================================================================================================================================
+        public async Task<TokenResponseDto?> RefreshTokenAsync(RefreshTokenRequestDto request)
         {
-            throw new NotImplementedException();
-        }
+            var user = await ValidateRefreshToken(request.UserID, request.RefreshToken);
+            if (user == null) return null;
 
+            return await CreateTokenResponse(user);
+        }
+        //=================================================================================================================================
         private async Task<TokenResponseDto> CreateTokenResponse(UserModel user)
         {
             return new TokenResponseDto
@@ -58,7 +61,6 @@ namespace E_Library.Services
                 RefreshToken = await GenerateAndSaveRefreshTokenAsync(user)
             };
         }
-
         private async Task<string> CreateToken(UserModel user)  //check if there's an error because i'm returning a string
         {
             var claims = new List<Claim>
@@ -76,11 +78,12 @@ namespace E_Library.Services
                 issuer: configuration.GetValue<string>("jwtsettings:Issuer"),
                 audience: configuration.GetValue<string>("jwtsettings:Audience"),
                 claims: claims,
-                expires: DateTime.Now.AddHours(67),
+                expires: DateTime.Now.AddDays(2),
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
         }
+        //================================================================================================================================
         private string GenerateRefreshToken()
         {
             var randomNumber = new Byte[32];
@@ -96,9 +99,17 @@ namespace E_Library.Services
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
 
-            await _usercontext.SaveChangesAsync();
+            await _user.SaveChangesAsync();
             return refreshToken;
         }
+        private async Task<UserModel?> ValidateRefreshToken(Guid userId, string refreshToken)
+        {
+            var user = await _user.User.FindAsync(userId);
+            if (user == null || user.RefreshTokenExpiryTime <= DateTime.Now || refreshToken != user.RefreshToken) return null;
+
+            return user;
+        }
+
 
     }
 }

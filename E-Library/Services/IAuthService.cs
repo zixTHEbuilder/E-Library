@@ -7,6 +7,6 @@ namespace E_Library.Services
     {
         Task<UserModel?> RegisterAsync(UserDto request);
         Task<TokenResponseDto?> LoginAsync(UserDto request);
-        Task<TokenResponseDto?> RefreshTokensAsync(RefreshTokenRequestDto request);
+        Task<TokenResponseDto?> RefreshTokenAsync(RefreshTokenRequestDto request);
     }
 }
