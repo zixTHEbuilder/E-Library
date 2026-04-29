@@ -9,6 +9,6 @@ namespace E_Library.Services
         Task<BookDisplayModel?> GetByIdAsync(int bookId, Guid userId);
         Task<BookDisplayModel?> GetByAuthorAsync(string author);
         Task<bool?> PurchaseBookAsync(int bookId, Guid userId);
-
+        Task<BookContent?> ReadBookAsync(string accessCode);
     }
 }

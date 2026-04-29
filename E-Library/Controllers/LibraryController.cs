@@ -33,7 +33,7 @@ namespace E_Library.Controllers
 
             return Ok(book);
         }
-        [HttpGet("{author:string}")]
+        [HttpGet("Author/{author:string}")]
         public async Task<IActionResult> GetByAuthor(string author)
         {
             if (NullOrEmptyChecker(author)) return BadRequest("Author name cannot be empty");
@@ -50,11 +50,22 @@ namespace E_Library.Controllers
 
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var purchasedBook = await _books.PurchaseBookAsync(id,userId);
+            var purchasedBook = await _books.PurchaseBookAsync(id, userId);
 
             if (purchasedBook is null) return Unauthorized("Purchase Failed");
 
             return Ok(purchasedBook);
+        }
+        [HttpGet("{bookId:int}/{accessToken:string}")]
+        public async Task<IActionResult> ReadBook(int bookId, string accessToken)
+        {
+            if (NullOrEmptyChecker(accessToken) || bookId < 1) return BadRequest("Book ID or Book Access Token can't be empty");
+
+            var bookcontent = await _books.ReadBookAsync(accessToken);
+
+            if (bookcontent is null) return Unauthorized("Book not found or Incorrect Access Token");
+
+            return Ok(bookcontent);
         }
         private bool NullOrEmptyChecker(params string[] values) => values.Any(string.IsNullOrEmpty);
     }

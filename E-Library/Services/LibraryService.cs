@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System.Collections;
 using System.Collections.Immutable;
+using System.Xml;
 using static System.Reflection.Metadata.BlobBuilder;
 
 namespace E_Library.Services
@@ -80,6 +81,35 @@ namespace E_Library.Services
             _library.UserBooks.Add(addToUserBook);
             await _library.SaveChangesAsync();
             return true;
+        }
+        public async Task<BookContent?> ReadBookAsync(int id, string accessCode)
+        {
+            var content = await _library.BookContent.FirstOrDefaultAsync(c=> c.id == id);
+
+            if (content is null || content.RequiredAccessCode != accessCode) return null;
+
+            return content;
+        }
+        public async Task CreateBook(CreateBookDto dto)
+        {
+            var book = new BookModel
+            {
+                BookName = dto.BookName,
+                Author = dto.Author,
+                PurchasePrice = dto.PurchasePrice
+            };
+            _library.Books.Add(book);
+            await _library.SaveChangesAsync();
+
+            var bookCreate = new BookContent
+            {
+                bookId = book.Id,
+                title = book.BookName,
+                content = dto.Body,
+                RequiredAccessCode = book.BookAccessCode
+            };
+            _library.BookContent.Add(bookCreate);
+            await _library.SaveChangesAsync();
         }
     }
 }

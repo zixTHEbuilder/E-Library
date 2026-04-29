@@ -8,5 +8,6 @@ namespace E_Library.Data
         public DbSet<BookDisplayModel> BooksDisplay => Set<BookDisplayModel>();
         public DbSet<UserModel> User => Set<UserModel>();
         public DbSet<UserBooks> UserBooks => Set<UserBooks>();
+        public DbSet<BookContent> BookContent => Set<BookContent>();
     }
 }
