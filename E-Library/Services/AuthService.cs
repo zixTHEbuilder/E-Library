@@ -2,6 +2,7 @@
 using E_Library.Dtos;
 using E_Library.Models;
 using E_Library.Services;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +15,17 @@ using System.Text;
 
 namespace E_Library.Services
 {
-    public class AuthService(LibraryContext usercontext, IConfiguration configuration) : IAuthService
+    public class AuthService(LibraryContext usercontext, IConfiguration configuration, IServiceProvider serviceProvider) : IAuthService
     {
         private readonly LibraryContext _user = usercontext;
+        public async Task ValidateAsync<T>(T dto)
+        {
+            var validator = serviceProvider.GetService<IValidator<T>>();
+            await validator.ValidateAndThrowAsync(dto);
+        }
         public async Task<UserModel?> RegisterAsync(UserDto request)
         {
+            await ValidateAsync(request);
             if (_user.User.Any(u => u.Username == request.Username)) return null;
 
             var user = new UserModel();
@@ -27,6 +34,7 @@ namespace E_Library.Services
 
             user.Username = request.Username;
             user.PasswordHash = hashedPassword;
+            user.BookCredits = 10000;
 
             await _user.User.AddAsync(user);
 

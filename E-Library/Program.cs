@@ -5,11 +5,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IAuthService, AuthService>();
-//builder.Services.AddScoped<ILibraryService, LibraryService>();
+builder.Services.AddScoped<ILibraryService, LibraryService>();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddDbContext<LibraryContext>(options => options
     .UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -42,9 +44,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
-
 app.UseAuthentication();
+
+app.UseAuthorization();
 
 app.MapControllers();
 

@@ -4,6 +4,7 @@ using E_Library.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace E_Library.Migrations
 {
     [DbContext(typeof(LibraryContext))]
-    partial class LibraryContextModelSnapshot : ModelSnapshot
+    [Migration("20260502070603_removedBookdisplayModelfrommodels")]
+    partial class removedBookdisplayModelfrommodels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -88,9 +91,6 @@ namespace E_Library.Migrations
 
                     b.Property<int>("BookId")
                         .HasColumnType("int");
-
-                    b.Property<DateTime>("PurchaseDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("PurchasePrice")
                         .HasColumnType("int");

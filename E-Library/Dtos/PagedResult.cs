@@ -2,9 +2,9 @@
 {
     public class PagedResult<T>
     {
-        public int CurentPage;
-        public int TotalPages;
-        public List<T> Data = new List<T>();
-        public int TotalBooks;
+        public int CurentPage { get; set; }
+        public int TotalPages { get; set; }
+        public List<T> Data { get; set; } =  new List<T>();
+        public int TotalBooks { get; set; }
     }
 }

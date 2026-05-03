@@ -6,6 +6,6 @@
         public Guid UserId { get; set; }
         public int BookId { get; set; }
         public int PurchasePrice { get; set; }
-        public DateTime PurchaseDate = DateTime.Now;
+        public DateTime PurchaseDate { get; set; }
     }
 }

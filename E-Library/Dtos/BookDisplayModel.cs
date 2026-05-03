@@ -1,4 +1,6 @@
-﻿namespace E_Library.Models
+﻿using E_Library.Models;
+
+namespace E_Library.Dtos
 {
     public class BookDisplayModel
     {
