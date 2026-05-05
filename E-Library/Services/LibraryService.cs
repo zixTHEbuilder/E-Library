@@ -99,7 +99,7 @@ namespace E_Library.Services
 
             return content;
         }
-        public async Task<bool> CreateBookAsync(CreateBookDto dto)
+        public async Task<string> CreateBookAsync(CreateBookDto dto)
         {
             await ValidateAsync(dto);
             //we are using 2 "SaveChanges" here so if one is successful while the other isn't,
@@ -107,6 +107,10 @@ namespace E_Library.Services
             using var transaction = await _library.Database.BeginTransactionAsync();
             try
             {
+                if (await _library.Books.AnyAsync(b => b.BookName == dto.BookName) || 
+                    await _library.BookContent.AnyAsync(bc => bc.content == dto.Body))
+                    return "Duplicate Request : Book with that name or content already exists";
+
                 var book = new BookModel
                 {
                     BookName = dto.BookName,
@@ -129,13 +133,13 @@ namespace E_Library.Services
                 await _library.SaveChangesAsync();
 
                 await transaction.CommitAsync();
-                return true;
+                return "Success";
             }
             catch(Exception e)
             {
-                Console.WriteLine(e.Message);
                 await transaction.RollbackAsync();
-                return false;
+                Console.WriteLine($"Database error : {e.Message}");
+                return "An unexpected error occured while adding the book, please try again later";
             }
         }
     }

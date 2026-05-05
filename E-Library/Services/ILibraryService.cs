@@ -10,6 +10,6 @@ namespace E_Library.Services
         Task<BookDisplayModel?> GetByAuthorAsync(string author);
         Task<bool?> PurchaseBookAsync(int bookId, Guid userId);
         Task<BookContent?> ReadBookAsync(Guid userId, int bookId,string accessCode);
-        Task<bool> CreateBookAsync(CreateBookDto dto);
+        Task<string> CreateBookAsync(CreateBookDto dto);
     }
 }

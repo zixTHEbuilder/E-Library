@@ -82,9 +82,11 @@ namespace E_Library.Controllers
         {
             if (NullOrEmptyChecker(dto.Author, dto.Body, dto.BookName)) return BadRequest("Fields can't be empty. Please enter the name of the Book, its Author, Contents of the book and Purchase Price");
 
-            var created = await _books.CreateBookAsync(dto);
+            var result = await _books.CreateBookAsync(dto);
 
-            return created? Ok("Book added to library") : BadRequest("Something went wrong");
+
+            return result == "Success" ? Ok("Book added to library")
+                : result.Contains("Duplicate") ? Conflict(result) : BadRequest(result);
         }
         private bool NullOrEmptyChecker(params string[] values) => values.Any(string.IsNullOrEmpty);
     }
