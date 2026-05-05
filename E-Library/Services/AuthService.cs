@@ -20,7 +20,7 @@ namespace E_Library.Services
         private readonly LibraryContext _user = usercontext;
         public async Task ValidateAsync<T>(T dto)
         {
-            var validator = serviceProvider.GetService<IValidator<T>>();
+            var validator = serviceProvider.GetRequiredService<IValidator<T>>();
             await validator.ValidateAndThrowAsync(dto);
         }
         public async Task<UserModel?> RegisterAsync(UserDto request)

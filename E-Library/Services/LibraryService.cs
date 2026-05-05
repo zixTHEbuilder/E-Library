@@ -46,14 +46,16 @@ namespace E_Library.Services
 
             return displayBook;
         }
-        public async Task<BookDisplayModel?> GetByAuthorAsync(string author)
+        public async Task<IEnumerable<BookDisplayModel>?> GetByAuthorAsync(string author)
         {
-            var authorBooks = await _library.Books.FirstOrDefaultAsync(a => a.Author == author);
+            var authorBooks = await _library.Books
+                .Where(a => a.Author == author)
+                .Select(book => new BookDisplayModel(book)).ToListAsync();
 
-            if (authorBooks is null) return null;
 
-            var displayBook = new BookDisplayModel(authorBooks);
-            return displayBook;
+            if (authorBooks.Count is 0) return null;
+
+            return authorBooks;
         }
         public async Task<bool?> PurchaseBookAsync(int bookId, Guid userId)
         {
@@ -85,7 +87,7 @@ namespace E_Library.Services
             await _library.SaveChangesAsync();
             return true;
         }
-        public async Task<BookContent?> ReadBookAsync(Guid userId, int bookId, string accessCode)
+        public async Task<BookContent?> ReadBookAsync(Guid userId, int bookId, string accessToken)
         {
             //Make sure you're searching via bookId and not the Primary key "id"
             var content = await _library.BookContent.FirstOrDefaultAsync(b=> b.bookId == bookId);
@@ -95,7 +97,7 @@ namespace E_Library.Services
             bool hasPurchased = await _library.UserBooks.AnyAsync(ub => ub.BookId == bookId && ub.UserId == userId);
             if (!hasPurchased) return null;
 
-            if (content is null || content.RequiredAccessCode != accessCode) return null;
+            if (content is null || content.RequiredAccessCode != accessToken) return null;
 
             return content;
         }

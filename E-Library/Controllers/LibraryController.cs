@@ -49,7 +49,7 @@ namespace E_Library.Controllers
             return Ok(booksByAuthor);
         }
         [Authorize]
-        [HttpGet("Purchase/{id:int}")]
+        [HttpPost("Purchase/{id:int}")]
         public async Task<IActionResult> PurchaseBook(int id)
         {
             if (id < 1) return BadRequest("ID can't be less than 1");
@@ -64,15 +64,15 @@ namespace E_Library.Controllers
             return Ok("Book Purchased");
         }
         [Authorize]
-        [HttpGet("{bookId:int}/{accessToken}")]
-        public async Task<IActionResult> ReadBook(int bookId, string accessToken)
+        [HttpPost("Read")]
+        public async Task<IActionResult> ReadBook(ReadBookDto dto)
         {
-            if (NullOrEmptyChecker(accessToken) || bookId < 1) return BadRequest("Book ID or Book Access Token can't be empty");
+            if (NullOrEmptyChecker(dto.accessToken) ||dto.bookId < 1) return BadRequest("Book ID or Book Access Token can't be empty");
 
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var bookcontent = await _books.ReadBookAsync(userId,bookId,accessToken);
+            var bookcontent = await _books.ReadBookAsync(userId,dto.bookId,dto.accessToken);
 
-            if (bookcontent is null) return Unauthorized("Book not found,Incorrect Access Token (Please make sure you own the book)");
+            if (bookcontent is null) return Unauthorized("Book not found or Incorrect Access Token (Please make sure you own the book)");
 
             return Ok(bookcontent);
         }
