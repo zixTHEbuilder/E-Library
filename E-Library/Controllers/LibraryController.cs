@@ -90,13 +90,13 @@ namespace E_Library.Controllers
                 : result.Contains("Duplicate") ? Conflict(result) : BadRequest(result);
         }
         [Authorize(Roles = "Admin")]
-        [HttpPut("Update")]
-        public async Task<IActionResult> UpdateBook(UpdateBookDto dto)
+        [HttpPut("Update/{id:int}")]
+        public async Task<IActionResult> UpdateBook(int id, UpdateBookDto dto)
         {
             if (NullOrEmptyChecker(dto.Author, dto.Body, dto.BookName))
                 return BadRequest("Fields can't be empty. Please enter the name of the Book, its Author, Contents");
 
-            var result = await _books.UpdateBookAsync(dto);
+            var result = await _books.UpdateBookAsync(id,dto);
 
             return result? Ok("Book Updated") : NotFound("Book not found");
 

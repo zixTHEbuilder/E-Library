@@ -145,24 +145,34 @@ namespace E_Library.Services
                 return "An unexpected error occured while adding the book, please try again later";
             }
         }
-        public async Task<bool> UpdateBookAsync(UpdateBookDto dto)
+        public async Task<bool> UpdateBookAsync(int id, UpdateBookDto dto)
         {
-            var book = await _library.Books.FindAsync(dto.bookId);
-            if (book is null) return false;
+            using var transaction = await _library.Database.BeginTransactionAsync();
+            try
+            {
+                var book = await _library.Books.FindAsync(id);
+                if (book is null) return false;
 
-            book.BookName = dto.BookName;
-            book.Author = dto.Author;
-            book.PurchasePrice = dto.PurchasePrice;
+                book.BookName = dto.BookName;
+                book.Author = dto.Author;
+                book.PurchasePrice = dto.PurchasePrice;
 
-            var bookContent = await _library.BookContent.FirstOrDefaultAsync(bc => bc.bookId == dto.bookId);
-            if (bookContent is null) return false;
+                var bookContent = await _library.BookContent.FirstOrDefaultAsync(bc => bc.bookId == id);
+                if (bookContent is null) return false;
 
 
-            bookContent.title = dto.BookName;
-            bookContent.content = dto.Body;
+                bookContent.title = dto.BookName;
+                bookContent.content = dto.Body;
 
-            await _library.SaveChangesAsync();
-            return true;
+                await _library.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                await transaction.RollbackAsync();
+                Console.WriteLine($"Database error : {e.Message}");
+                return false;
+            }
         }
     }
 }

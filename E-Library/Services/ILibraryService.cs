@@ -11,6 +11,6 @@ namespace E_Library.Services
         Task<bool?> PurchaseBookAsync(int bookId, Guid userId);
         Task<BookContent?> ReadBookAsync(Guid userId, int bookId,string accessCode);
         Task<string> CreateBookAsync(CreateBookDto dto);
-        Task<bool> UpdateBookAsync(UpdateBookDto dto);
+        Task<bool> UpdateBookAsync(int id, UpdateBookDto dto);
     }
 }
