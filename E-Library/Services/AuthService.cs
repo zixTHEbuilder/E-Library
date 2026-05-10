@@ -23,10 +23,10 @@ namespace E_Library.Services
             var validator = serviceProvider.GetRequiredService<IValidator<T>>();
             await validator.ValidateAndThrowAsync(dto);
         }
-        public async Task<UserModel?> RegisterAsync(UserDto request)
+        public async Task<bool> RegisterAsync(UserDto request)
         {
             await ValidateAsync(request);
-            if (_user.User.Any(u => u.Username == request.Username)) return null;
+            if (_user.User.Any(u => u.Username == request.Username)) return false;
 
             var user = new UserModel();
             var hashedPassword = new PasswordHasher<UserModel>()
@@ -40,7 +40,7 @@ namespace E_Library.Services
 
             await _user.SaveChangesAsync();
 
-            return user;
+            return true;
         }
         public async Task<TokenResponseDto?> LoginAsync(UserDto request)
         {
@@ -65,6 +65,7 @@ namespace E_Library.Services
         {
             return new TokenResponseDto
             {
+                UserId = user.id,
                 AccessToken = await CreateToken(user),
                 RefreshToken = await GenerateAndSaveRefreshTokenAsync(user)
             };
@@ -117,7 +118,5 @@ namespace E_Library.Services
 
             return user;
         }
-
-
     }
 }

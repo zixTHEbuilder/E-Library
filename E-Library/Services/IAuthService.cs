@@ -5,7 +5,7 @@ namespace E_Library.Services
 {
     public interface IAuthService
     {
-        Task<UserModel?> RegisterAsync(UserDto request);
+        Task<bool> RegisterAsync(UserDto request);
         Task<TokenResponseDto?> LoginAsync(UserDto request);
         Task<TokenResponseDto?> RefreshTokenAsync(RefreshTokenRequestDto request);
     }

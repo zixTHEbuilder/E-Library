@@ -80,13 +80,26 @@ namespace E_Library.Controllers
         [HttpPost("Add")]
         public async Task<IActionResult> AddBook(CreateBookDto dto)
         {
-            if (NullOrEmptyChecker(dto.Author, dto.Body, dto.BookName)) return BadRequest("Fields can't be empty. Please enter the name of the Book, its Author, Contents of the book and Purchase Price");
+            if (NullOrEmptyChecker(dto.Author, dto.Body, dto.BookName)) 
+                return BadRequest("Fields can't be empty. Please enter the name of the Book, its Author, Contents of the book and Purchase Price");
 
             var result = await _books.CreateBookAsync(dto);
 
 
             return result == "Success" ? Ok("Book added to library")
                 : result.Contains("Duplicate") ? Conflict(result) : BadRequest(result);
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpPut("Update")]
+        public async Task<IActionResult> UpdateBook(UpdateBookDto dto)
+        {
+            if (NullOrEmptyChecker(dto.Author, dto.Body, dto.BookName))
+                return BadRequest("Fields can't be empty. Please enter the name of the Book, its Author, Contents");
+
+            var result = await _books.UpdateBookAsync(dto);
+
+            return result? Ok("Book Updated") : NotFound("Book not found");
+
         }
         private bool NullOrEmptyChecker(params string[] values) => values.Any(string.IsNullOrEmpty);
     }

@@ -17,9 +17,7 @@ namespace E_Library.Controllers
             if (NullOrEmptyChecker(request.Username, request.Password)) return BadRequest("Username or Password cannot be empty");
 
             var register = await _auth.RegisterAsync(request);
-            if (register == null) return Conflict("User already exists");
-
-            return Ok("Account Created");
+            return register? Ok("Account Created") : Conflict("User already exists");
         }
         [HttpPost("Login")]
         public async Task<ActionResult<TokenResponseDto>> LoginAsync(UserDto request)

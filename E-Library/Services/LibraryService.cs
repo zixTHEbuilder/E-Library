@@ -3,6 +3,7 @@ using E_Library.Dtos;
 using E_Library.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using System.Xml;
 
 namespace E_Library.Services
 {
@@ -143,6 +144,25 @@ namespace E_Library.Services
                 Console.WriteLine($"Database error : {e.Message}");
                 return "An unexpected error occured while adding the book, please try again later";
             }
+        }
+        public async Task<bool> UpdateBookAsync(UpdateBookDto dto)
+        {
+            var book = await _library.Books.FindAsync(dto.bookId);
+            if (book is null) return false;
+
+            book.BookName = dto.BookName;
+            book.Author = dto.Author;
+            book.PurchasePrice = dto.PurchasePrice;
+
+            var bookContent = await _library.BookContent.FirstOrDefaultAsync(bc => bc.bookId == dto.bookId);
+            if (bookContent is null) return false;
+
+
+            bookContent.title = dto.BookName;
+            bookContent.content = dto.Body;
+
+            await _library.SaveChangesAsync();
+            return true;
         }
     }
 }
