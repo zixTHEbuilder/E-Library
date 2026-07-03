@@ -93,9 +93,7 @@ namespace E_Library.Services
             //Make sure you're searching via bookId and not the Primary key "id"
             var content = await _library.BookContent.FirstOrDefaultAsync(b=> b.bookId == bookId);
 
-            var user = new UserModel();
-
-            bool hasPurchased = await _library.UserBooks.AnyAsync(ub => ub.BookId == bookId && ub.UserId == userId);
+            bool hasPurchased = await _library.UserBooks.AnyAsync(ub => ub.UserId == userId && ub.BookId == bookId);
             if (!hasPurchased) return null;
 
             if (content is null || content.RequiredAccessCode != accessToken) return null;

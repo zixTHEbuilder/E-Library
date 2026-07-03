@@ -1,8 +1,8 @@
 using E_Library.Dtos;
+using E_Library.Helpers;
 using E_Library.Models;
 using E_Library.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 namespace E_Library.Controllers
@@ -41,7 +41,7 @@ namespace E_Library.Controllers
         [HttpGet("Author/{author}")]
         public async Task<IActionResult> GetByAuthor(string author)
         {
-            if (NullOrEmptyChecker(author)) return BadRequest("Author name cannot be empty");
+            if (StringHelper.NullOrEmptyChecker(author)) return BadRequest("Author name cannot be empty");
 
             var booksByAuthor = await _books.GetByAuthorAsync(author);
             if (booksByAuthor is null) return NotFound("Author not found");
@@ -67,7 +67,7 @@ namespace E_Library.Controllers
         [HttpPost("Read")]
         public async Task<IActionResult> ReadBook(ReadBookDto dto)
         {
-            if (NullOrEmptyChecker(dto.accessToken) ||dto.bookId < 1) return BadRequest("Book ID or Book Access Token can't be empty");
+            if (StringHelper.NullOrEmptyChecker(dto.accessToken) ||dto.bookId < 1) return BadRequest("Book ID or Book Access Token can't be empty");
 
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var bookcontent = await _books.ReadBookAsync(userId,dto.bookId,dto.accessToken);
@@ -80,7 +80,7 @@ namespace E_Library.Controllers
         [HttpPost("Add")]
         public async Task<IActionResult> AddBook(CreateBookDto dto)
         {
-            if (NullOrEmptyChecker(dto.Author, dto.Body, dto.BookName)) 
+            if (StringHelper.NullOrEmptyChecker(dto.Author, dto.Body, dto.BookName)) 
                 return BadRequest("Fields can't be empty. Please enter the name of the Book, its Author, Contents of the book and Purchase Price");
 
             var result = await _books.CreateBookAsync(dto);
@@ -93,7 +93,7 @@ namespace E_Library.Controllers
         [HttpPut("Update/{id:int}")]
         public async Task<IActionResult> UpdateBook(int id, UpdateBookDto dto)
         {
-            if (NullOrEmptyChecker(dto.Author, dto.Body, dto.BookName))
+            if (StringHelper.NullOrEmptyChecker(dto.Author, dto.Body, dto.BookName))
                 return BadRequest("Fields can't be empty. Please enter the name of the Book, its Author, Contents");
 
             var result = await _books.UpdateBookAsync(id,dto);
@@ -101,6 +101,6 @@ namespace E_Library.Controllers
             return result? Ok("Book Updated") : NotFound("Book not found");
 
         }
-        private bool NullOrEmptyChecker(params string[] values) => values.Any(string.IsNullOrEmpty);
+        //private bool NullOrEmptyChecker(params string[] values) => values.Any(string.IsNullOrEmpty);
     }
 }
