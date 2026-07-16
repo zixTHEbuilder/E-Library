@@ -9,9 +9,15 @@ namespace E_Library.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class LibraryController(ILibraryService bookservice) : ControllerBase
+
+    public class LibraryController(ILibraryService libraryService) : ControllerBase
     {
-        private readonly ILibraryService _books = bookservice;
+        //private readonly ILibraryService _libraryService;
+        //public LibraryController(ILibraryService libraryService)
+        //{
+        //    _libraryService = libraryService;
+        //}
+
         [Authorize]
         [HttpGet("All")]
         public async Task<IActionResult> AllBooks(int pageNumber = 1, int pageSize = 20)
@@ -19,7 +25,7 @@ namespace E_Library.Controllers
             if (pageNumber < 1 || pageSize < 1 || pageSize > 30)
                 return BadRequest("Page number or Page size can't be less than 1 and Page size can't be greater than 30");
 
-            var books = await _books.GetAllBooksAsync(pageNumber, pageSize);
+            var books = await libraryService.GetAllBooksAsync(pageNumber, pageSize);
 
             return books is null ? NotFound("No books found") : Ok(books);
         }
@@ -32,7 +38,7 @@ namespace E_Library.Controllers
             //guid parse method is used to get the uid of the logged in user and convert it to guid format
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var book = await _books.GetByIdAsync(bookId, userId);
+            var book = await libraryService.GetByIdAsync(bookId, userId);
             if (book is null) return NotFound("The entered ID does not match any books in our library");
 
             return Ok(book);
@@ -43,7 +49,7 @@ namespace E_Library.Controllers
         {
             if (StringHelper.NullOrEmptyChecker(author)) return BadRequest("Author name cannot be empty");
 
-            var booksByAuthor = await _books.GetByAuthorAsync(author);
+            var booksByAuthor = await libraryService.GetByAuthorAsync(author);
             if (booksByAuthor is null) return NotFound("Author not found");
 
             return Ok(booksByAuthor);
@@ -56,7 +62,7 @@ namespace E_Library.Controllers
 
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var purchasedBook = await _books.PurchaseBookAsync(id, userId);
+            var purchasedBook = await libraryService.PurchaseBookAsync(id, userId);
 
             if (purchasedBook is false) 
                 return BadRequest("Purchase Failed! Please check that the book ID is correct, you have sufficient Book Credits and that u don't already own it");
@@ -70,7 +76,7 @@ namespace E_Library.Controllers
             if (StringHelper.NullOrEmptyChecker(dto.accessToken) ||dto.bookId < 1) return BadRequest("Book ID or Book Access Token can't be empty");
 
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var bookcontent = await _books.ReadBookAsync(userId,dto.bookId,dto.accessToken);
+            var bookcontent = await libraryService.ReadBookAsync(userId,dto.bookId,dto.accessToken);
 
             if (bookcontent is null) return Unauthorized("Book not found or Incorrect Access Token (Please make sure you own the book)");
 
@@ -83,7 +89,7 @@ namespace E_Library.Controllers
             if (StringHelper.NullOrEmptyChecker(dto.Author, dto.Body, dto.BookName)) 
                 return BadRequest("Fields can't be empty. Please enter the name of the Book, its Author, Contents of the book and Purchase Price");
 
-            var result = await _books.CreateBookAsync(dto);
+            var result = await libraryService.CreateBookAsync(dto);
 
 
             return result == "Success" ? Ok("Book added to library")
@@ -96,7 +102,7 @@ namespace E_Library.Controllers
             if (StringHelper.NullOrEmptyChecker(dto.Author, dto.Body, dto.BookName))
                 return BadRequest("Fields can't be empty. Please enter the name of the Book, its Author, Contents");
 
-            var result = await _books.UpdateBookAsync(id,dto);
+            var result = await libraryService.UpdateBookAsync(id,dto);
 
             return result? Ok("Book Updated") : NotFound("Book not found");
 

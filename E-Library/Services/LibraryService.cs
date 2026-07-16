@@ -3,13 +3,14 @@ using E_Library.Dtos;
 using E_Library.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
-using System.Xml;
 
 namespace E_Library.Services
 {
     public class LibraryService(LibraryContext library, IServiceProvider serviceProvider) : ILibraryService
     {
-        private readonly LibraryContext _library = library;
+        // u can comment this private field out and use "library" (from the primary constructor)
+        // directly to make ur code cleaner but it makes it mutable ("library" can be reassigned)
+        private readonly LibraryContext _library = library; 
         private async Task ValidateAsync<T>(T dto)
         {
             var validator = serviceProvider.GetRequiredService<IValidator<T>>();
@@ -49,6 +50,7 @@ namespace E_Library.Services
         }
         public async Task<IEnumerable<BookDisplayModel>?> GetByAuthorAsync(string author)
         {
+            await ValidateAsync(author);
             var authorBooks = await _library.Books
                 .Where(a => a.Author == author)
                 .Select(book => new BookDisplayModel(book)).ToListAsync();
@@ -145,6 +147,9 @@ namespace E_Library.Services
         }
         public async Task<bool> UpdateBookAsync(int id, UpdateBookDto dto)
         {
+            //What happens when u use validate async method whose validator isn't written?
+            // await ValidateAsync(dto);
+            //500 Internal Server Error : "detail": "No service for type 'FluentValidation.IValidator`1[E_Library.Dtos.UpdateBookDto]' has been registered.",
             using var transaction = await _library.Database.BeginTransactionAsync();
             try
             {

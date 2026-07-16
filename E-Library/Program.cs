@@ -6,11 +6,15 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using FluentValidation;
 using E_Library.Exceptions;
+using Moq;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILibraryService, LibraryService>();
+var serviceProvider = builder.Services.AddSingleton<ITestService, TestService>();
+
 builder.Services.AddProblemDetails(configure =>
 {
     configure.CustomizeProblemDetails = context =>
@@ -41,16 +45,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+
 builder.Services.AddOpenApi();
-
 var app = builder.Build();
+app.UseExceptionHandler(); 
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.UseExceptionHandler();
 }
+
+// Configure the HTTP request pipeline.
 
 app.UseHttpsRedirection();
 

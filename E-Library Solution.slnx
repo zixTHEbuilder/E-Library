@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="E-Library.UnitTests/E-Library.UnitTests.csproj" Id="67657f54-c276-4fc1-80c8-9ccb43f39970" />
+  <Project Path="E-Library/E-Library.csproj" />
+</Solution>
