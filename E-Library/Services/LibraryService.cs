@@ -75,6 +75,7 @@ namespace E_Library.Services
 
             var purchaseBook = (user.BookCredits - book.PurchasePrice);
             user.BookCredits = purchaseBook;
+            //BooksOwned thing has an error, it'll overwrite after every book u purchase
             user.BooksOwned = book.BookName;
 
 
