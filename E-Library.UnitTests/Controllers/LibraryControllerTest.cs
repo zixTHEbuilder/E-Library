@@ -1,16 +1,11 @@
 ﻿using E_Library.Controllers;
-using E_Library.Data;
 using E_Library.Dtos;
 using E_Library.Models;
 using E_Library.Services;
 using FluentAssertions;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.OutputCaching;
-using Microsoft.EntityFrameworkCore;
 using Moq;
-using Newtonsoft.Json.Linq;
 using System.Security.Claims;
 
 namespace E_Library.UnitTests.Controllers
@@ -58,7 +53,8 @@ namespace E_Library.UnitTests.Controllers
             var okResult = Assert.IsType<OkObjectResult>(returnedResult);
 
             Assert.Equal(pagedResult, okResult.Value);
-            Assert.Equal(200, okResult.StatusCode);
+            Assert.IsType<PagedResult<BookDisplayModel>>(okResult.Value);
+            libraryServiceMock.Verify(x => x.GetAllBooksAsync(1, 2), Times.Once);
 
 
             //var okResult = returnedResult.Should().BeOfType<OkObjectResult>().Subject; 
@@ -84,6 +80,7 @@ namespace E_Library.UnitTests.Controllers
 
             var result = await controller.GetById(bookId);
 
+            //Unwraps the HTTP wrapper (OkObjectResult) to get the values inside
             var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
             //var okResult = Assert.IsType<OkObjectResult>(result);
 
@@ -100,26 +97,33 @@ namespace E_Library.UnitTests.Controllers
         {
             var libraryServiceMock = new Mock<ILibraryService>();
             var testUserId = Guid.NewGuid();
-            libraryServiceMock.Setup(x => x.GetByIdAsync(100, It.IsAny<Guid>)).ReturnsAsync((BookDisplayModel?)null);
+            libraryServiceMock.Setup(x => x.GetByIdAsync(100, It.IsAny<Guid>())).ReturnsAsync((BookDisplayModel?)null);
             var controller = CreateControllerWithUser(libraryServiceMock.Object,testUserId);
 
             var result = await controller.GetById(100);
 
             result.Should().BeOfType<NotFoundObjectResult>();
         }
-        [Theory]
-        [InlineData(0)]
-        [InlineData(-1)]
-        public async Task PurchaseBook_WithInvalidId_ReturnsBadRequest(int bookId)
+        [Fact]
+        public async Task GetByAuthor_WithAuthorName_ReturnsOkResult()
         {
+            var author = new BookDisplayModel
+            {
+                Id = 1,
+                BookName = "Lincoln's Guide to Eternal Mathemical Suffering",
+                Author = "Abraham"
+            };
             var libraryServiceMock = new Mock<ILibraryService>();
-            var testUserId = Guid.NewGuid();
-            libraryServiceMock.Setup(x => x.PurchaseBookAsync(bookId, It.IsAny<Guid>())).ReturnsAsync(false);
-            var controller = CreateControllerWithUser(libraryServiceMock.Object, testUserId);
+            libraryServiceMock.Setup(x => x.GetByAuthorAsync("Abraham")).ReturnsAsync(new List<BookDisplayModel>());
+            var controller = new LibraryController(libraryServiceMock.Object);
 
-            var result = await controller.PurchaseBook(bookId);
+            var result = await controller.GetByAuthor("Abraham");
 
-            result.Should().BeOfType<BadRequestObjectResult>();
+            var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+ 
+            okResult.StatusCode.Should().Be(200);
+            okResult.Value.Should().BeAssignableTo<IEnumerable<BookDisplayModel>>();
+            libraryServiceMock.Verify(x => x.GetByAuthorAsync("Abraham"), Times.Once);
         }
         [Fact]
         public async Task PurchaseBook_WhenFailed_ReturnsBadRequest()
@@ -133,6 +137,60 @@ namespace E_Library.UnitTests.Controllers
 
             result.Should().BeOfType<BadRequestObjectResult>();
         }
+        [Fact]
+        public async Task ReadBook_WithValidRequest_ReturnsOkResult()
+        {
+            var dto = new ReadBookDto { bookId = 1, accessToken = "676767" };
+            var expectedContent = new BookContent {content = "Book text content" };
+            var libraryServiceMock = new Mock<ILibraryService>();
+            var testUserId = Guid.NewGuid();
+
+            libraryServiceMock.Setup(x => x.ReadBookAsync(testUserId, dto.bookId, dto.accessToken)).ReturnsAsync(expectedContent);
+
+            var controller = CreateControllerWithUser(libraryServiceMock.Object, testUserId);
+
+            var result = await controller.ReadBook(dto);
+
+            var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+            okResult.Value.Should().Be(expectedContent);
+            libraryServiceMock.Verify(x => x.ReadBookAsync(testUserId, dto.bookId, dto.accessToken), Times.Once);
+        }
+
+        [Theory]
+        [InlineData(0, "1234567")]
+        [InlineData(1, "")]
+        [InlineData(-1, null)]
+        public async Task ReadBook_WithInvalidInput_ReturnsBadRequest(int bookId, string? token)
+        {
+            var dto = new ReadBookDto { bookId = bookId, accessToken = token };
+            var libraryServiceMock = new Mock<ILibraryService>();
+            var testUserId = Guid.NewGuid();
+            var controller = CreateControllerWithUser(libraryServiceMock.Object, testUserId);
+
+            var result = await controller.ReadBook(dto);
+
+            result.Should().BeOfType<BadRequestObjectResult>();
+            libraryServiceMock.Verify(x => x.ReadBookAsync(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ReadBook_WhenContentNotFound_ReturnsUnauthorized()
+        {
+            var dto = new ReadBookDto { bookId = 1, accessToken = "BADTOKEN" };
+            var libraryServiceMock = new Mock<ILibraryService>();
+            var testUserId = Guid.NewGuid();
+
+            libraryServiceMock.Setup(x => x.ReadBookAsync(testUserId, dto.bookId, dto.accessToken)).ReturnsAsync((BookContent?)null);
+
+            var controller = CreateControllerWithUser(libraryServiceMock.Object, testUserId);
+
+            var result = await controller.ReadBook(dto);
+
+            result.Should().BeOfType<UnauthorizedObjectResult>();
+            libraryServiceMock.Verify(x => x.ReadBookAsync(testUserId, dto.bookId, dto.accessToken), Times.Once);
+        }
+
+
 
 
 
