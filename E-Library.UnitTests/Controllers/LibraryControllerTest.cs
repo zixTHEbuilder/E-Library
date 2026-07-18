@@ -4,6 +4,7 @@ using E_Library.Dtos;
 using E_Library.Models;
 using E_Library.Services;
 using FluentAssertions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
@@ -64,8 +65,9 @@ namespace E_Library.UnitTests.Controllers
             //okResult.Value.Should().BeEquivalentTo(pagedResult);
         }
 
+        //For this theory I will be writing Assertion in both FluentAssertion and Assert
         [Theory]
-        [InlineData(10, true, "824E11B4")]
+        [InlineData(2, true, "CODE575")]
         [InlineData(10, false, "Purchase the book to get the Token")]
         public async Task GetById_Returns_CorrectAccessCode(int bookId , bool hasPurchased, string expectedToken)
         {
@@ -75,22 +77,64 @@ namespace E_Library.UnitTests.Controllers
                 BookAccessCode = hasPurchased? expectedToken : "Purchase the book to get the Token"
             };
 
-
             var libraryServiceMock = new Mock<ILibraryService>();
             var testUserId = Guid.NewGuid();
-            libraryServiceMock.Setup(x => x.GetByIdAsync(bookId, testUserId)).ReturnsAsync(expectedBookCode);
+            libraryServiceMock.Setup(x => x.GetByIdAsync(bookId, It.IsAny<Guid>())).ReturnsAsync(expectedBookCode);
             var controller = CreateControllerWithUser(libraryServiceMock.Object, testUserId);
 
             var result = await controller.GetById(bookId);
 
             var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+            //var okResult = Assert.IsType<OkObjectResult>(result);
+
             // code below is to unpack the object type so we can access internal properties like .BookAccessCode
             var returnedBook = okResult.Value.Should().BeOfType<BookDisplayModel>().Subject;
+            //var returnedBook = Assert.IsAssignableFrom<BookDisplayModel>(okResult.Value);
 
+            //dont use BeEquivalentTo for strings, tokens or accessCodes since it does a case-insensitive comparison
             returnedBook.BookAccessCode.Should().Be(expectedToken);
             //Assert.Equal(expectedToken, returnedBook.BookAccessCode);
         }
-   
+        [Fact]
+        public async Task BookId_WithInvalidBookId_ReturnsNotFound()
+        {
+            var libraryServiceMock = new Mock<ILibraryService>();
+            var testUserId = Guid.NewGuid();
+            libraryServiceMock.Setup(x => x.GetByIdAsync(100, It.IsAny<Guid>)).ReturnsAsync((BookDisplayModel?)null);
+            var controller = CreateControllerWithUser(libraryServiceMock.Object,testUserId);
+
+            var result = await controller.GetById(100);
+
+            result.Should().BeOfType<NotFoundObjectResult>();
+        }
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-1)]
+        public async Task PurchaseBook_WithInvalidId_ReturnsBadRequest(int bookId)
+        {
+            var libraryServiceMock = new Mock<ILibraryService>();
+            var testUserId = Guid.NewGuid();
+            libraryServiceMock.Setup(x => x.PurchaseBookAsync(bookId, It.IsAny<Guid>())).ReturnsAsync(false);
+            var controller = CreateControllerWithUser(libraryServiceMock.Object, testUserId);
+
+            var result = await controller.PurchaseBook(bookId);
+
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+        [Fact]
+        public async Task PurchaseBook_WhenFailed_ReturnsBadRequest()
+        {
+            var libraryServiceMock = new Mock<ILibraryService>();
+            var testUserId = Guid.NewGuid();
+            libraryServiceMock.Setup(x => x.PurchaseBookAsync(1, It.IsAny<Guid>())).ReturnsAsync(false);
+            var controller = CreateControllerWithUser(libraryServiceMock.Object, testUserId);
+
+            var result = await controller.PurchaseBook(1);
+
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+
 
 
 

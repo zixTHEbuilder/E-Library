@@ -75,7 +75,7 @@ namespace E_Library.Services
 
             var purchaseBook = (user.BookCredits - book.PurchasePrice);
             user.BookCredits = purchaseBook;
-            //BooksOwned thing has an error, it'll overwrite after every book u purchase
+            //BooksOwned thing has an error, it'll overwrite after every book u add
             user.BooksOwned = book.BookName;
 
 
@@ -131,7 +131,7 @@ namespace E_Library.Services
                     bookId = book.Id,
                     title = book.BookName,
                     content = dto.Body,
-                    RequiredAccessCode = assignedCode
+                    RequiredAccessCode = book.BookAccessCode
                 };
                 _library.BookContent.Add(bookContent);
                 await _library.SaveChangesAsync();
