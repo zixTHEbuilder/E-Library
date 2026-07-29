@@ -20,7 +20,7 @@ namespace E_Library.Controllers
 
         [Authorize]
         [HttpGet("All")]
-        public async Task<IActionResult> AllBooks(int pageNumber = 1, int pageSize = 20)
+        public async Task<IActionResult> AllBooks([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
         {
             if (pageNumber < 1 || pageSize < 1 || pageSize > 30)
                 return BadRequest("Page number or Page size can't be less than 1 and Page size can't be greater than 30");
