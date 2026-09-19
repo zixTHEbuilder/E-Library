@@ -78,7 +78,7 @@ namespace E_Library.Services
             //BooksOwned thing has an error, it'll overwrite after every book u add
             user.BooksOwned = book.BookName;
 
-
+                
             var addToUserBook = new UserBooks
             {
                 UserId = userId,
@@ -169,6 +169,7 @@ namespace E_Library.Services
                 bookContent.content = dto.Body;
 
                 await _library.SaveChangesAsync();
+                await transaction.CommitAsync();
                 return true;
             }
             catch (Exception e)
